@@ -1,6 +1,8 @@
-# Conda-Tab-Expansion â€” Tab `conda` commands in PowerShell!
+# CondaTabExpansion — "Tab" `conda` commands in PowerShell!
 
 > *Important note*: `PSReadLine` [(here)](https://github.com/PowerShell/PSReadLine) must be installed otherwise this module won't work at all!
+
+> *You can now download `CondaTabExpansion` from PowerShell Gallery!* [(here)](https://www.powershellgallery.com/packages/CondaTabExpansion/0.1.1)
 
 This module provides **full support** of `conda` command completion in PowerShell (for version 3 and up supposedly). You can tab and fill commands as if you were running in `bash` or other shells.
 
@@ -9,25 +11,41 @@ This project is inspired by the `ChocolateyTabExpansion` script in `Chocolatey` 
 ## Installation
 > If you are running PowerShell Core 6+, you can just move on since the latest `pwsh` has already shipped with `PSReadLine`. If not, please check and install it from the link above before proceeding to next steps.
 
-1. Download or copy the scripts (`condaProfile.psm1` and `CondaTabExpansion.ps1`) to your preferred director.
+### Instal from PowerShell Gallery
+   You can directly download `CondaTabExpansion` module from PowerShell Gallery[(here)](https://www.powershellgallery.com/) using the command below
 
-    For simplicity, I will assume the script will be stored under 
-    `$env:USERPROFILE\Documents\PowerShell\Scripts\Conda-Tab-Expansion`.
+```PowerShell
+Install-Module CondaTabExpansion
+```
 
-2. Edit your PowerShell profile and add a newline as below (it will automatically import the module at startup):
+#### Manual Installation (Not Recommended)
+   Download or copy the scripts (`CondaTabExpansion.psm1`, `CondaTabExpansion.ps1`, and `CondaTabExpansion.psd1`) to your preferred director.
 
-    ```powershell
-    Import-Module "$env:USERPROFILE\Documents\PowerShell\Scripts\Conda-Tab-Expansion\CondaTabExpansion.ps1" -Force
+For simplicity, I will assume the script will be stored under 
+`$env:USERPROFILE\Documents\PowerShell\Modules\CondaTabExpansion`.
+
+## Enable the Module
+1. Use the following command to enable the module
+
+    ```PowerShell
+    Import-Module CondaTabExpansion
     ```
 
+2. To import this module at startup, edit your PowerShell profile and add a newline as below (it will automatically import the module at startup):
 
-    2.1 If you don't know where your profile is. Just type the command below and it will show the path to your profile: 
+    ```powershell
+    ## If download from PSGallery
+    Import-Module CondaTabExpansion 
+
+    ## If download manually
+    Import-Module "$env:USERPROFILE\Documents\PowerShell\Scripts\CondaTabExpansion\CondaTabExpansion.ps1" -Force
+    ```
+
+    > If you don't know where your profile is. Just type the command below and it will show the path to your profile: 
 
     ```powershell 
     $PROFILE 
     ```
-
-    2.2 If your `Anaconda` isn't installed through `Chocolatey`, you need to redirect the `conda` path in `CondaTabExpansion.ps1`. More details at line `5-10` in `CondaTabExpansion.ps1`.
 
 3. Save the profile and restart your PowerShell. The tab completion for `conda` commands should be ready to go.
 
