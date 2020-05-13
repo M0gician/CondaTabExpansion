@@ -2,12 +2,25 @@ $Global:CondaTabSettings = New-Object PSObject -Property @{
     AllCommands = $false
 }
 
-# if you installed your Anaconda using Chocolatey, you can directly using the script below
-$script:conda = "$env:ChocolateyToolsLocation\Anaconda3\Library\bin\conda.bat"
+# The default conda path if installed by Chocolatey
+$chocoCondaPath = "$env:ChocolateyToolsLocation\Anaconda3\Library\bin\conda.bat"
 
-# or you can manually enter your conda.bat path (better performance) 
-# otherwise, comment the script above and uncomment the following script.
-# $script:conda = conda.bat
+# The default conda path (USER)
+$usrCondaPath = "$env:USERPROFILE\Anaconda3\Library\bin\conda.bat"
+
+# The default conda path (System)
+$sysCondaPath = "$env:SystemDrive\Anaconda3\Library\bin\conda.bat"
+
+if (Test-Path -Path $chocoCondaPath -PathType Leaf) {
+    $script:conda = $chocoCondaPath
+} elseif (Test-Path -Path $usrCondaPath -PathType Leaf) {
+    $script:conda = $usrCondaPath
+} elseif (Test-Path -Path $sysCondaPath -PathType Leaf) {
+    $script:conda = $sysCondaPath
+} else {
+    $script:conda = conda.bat   # Just use the conda.bat in PATH ... if can find one
+}
+
 
 function script:condaCmdOperations($commands, $command, $filter, $currentArguments) {
     $currentOptions = @('zzzz')
@@ -18,7 +31,7 @@ function script:condaCmdOperations($commands, $command, $filter, $currentArgumen
         Where-Object { $_ -like "$filter*" }
 }
 
-$script:someCommands = @('activate','env','info','install','update','list','remove','create','search','clean','-h','--help','-V','--version','config','init','package','run','uninstall','upgrade')
+$script:someCommands = @('activate','env','info','install','update','list','remove','create','search','clean','config','init','package','run','uninstall','upgrade','-h','--help','-V','--version')
 
 # ensure these all have a space to start, or they will cause issues
 $outputcommands = " --verbose -v --quiet -q --json"
@@ -203,7 +216,7 @@ if ($PowerTab_RegisterTabExpansion) {
 }
 
 if (Test-Path Function:\TabExpansion) {
-    Rename-Item Function:\TabExpansion ChocoTabExpansionBackup
+    Rename-Item Function:\TabExpansion sysTabExpansionBackup
 }
 
 function TabExpansion($line, $lastWord) {
@@ -214,8 +227,8 @@ function TabExpansion($line, $lastWord) {
         "^$(Get-AliasPattern conda) (.*)" { CondaTabExpansion $lastBlock }
 
         # Fall back on exisitng tab expansion
-        default { if (Test-Path Function:\TabExpansionBackup) {
-            ChocoTabExpansionBackup $line $lastWord
+        default { if (Test-Path Function:\sysTabExpansionBackup) {
+            sysTabExpansionBackup $line $lastWord
         } }
     }
 }
