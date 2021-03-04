@@ -4,6 +4,8 @@ import numpy as np
 import math
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
+from src.preprocessing.utils import get_all_reviews_of_user, get_conditional_vector, get_missing_vector, \
+    get_rating_vector
 
 import torch.nn as nn
 import torch.nn.functional as F
@@ -95,3 +97,87 @@ class ItemEmbedding(nn.Module):
         item_embedding = self.first_layer(item_embedding)
         item_embedding = nn.functional.relu(item_embedding)
         return self.output_layer(item_embedding)
+
+
+# training
+num_epochs = 100
+# for user
+c_embedding_size = 128
+item_counts = 10000  # total number of items
+review_embedding_size = 128
+user_rating_generator = Generator(item_counts, c_embedding_size, review_embedding_size)
+user_missing_generator = Generator(item_counts, c_embedding_size, review_embedding_size)
+user_rating_discriminator = Discriminator(item_counts, c_embedding_size, review_embedding_size)
+user_missing_discriminator = Discriminator(item_counts, c_embedding_size, review_embedding_size)
+g_step = 5
+d_step = 2
+batch_size_g = 32
+batch_size_d = 32
+user_rating_g_optimizer = torch.optim.Adam(user_rating_generator.parameters(), lr=0.0001)
+user_rating_d_optimizer = torch.optim.Adam(user_rating_discriminator.parameters(), lr=0.0001)
+user_missing_g_optimizer = torch.optim.Adam(user_missing_generator.parameters(), lr=0.0001)
+user_missing_d_optimizer = torch.optim.Adam(user_missing_discriminator.parameters(), lr=0.0001)
+
+# for items
+c_embedding_size = 128
+user_counts = 10000  # total number of users
+review_embedding_size = 128
+item_rating_generator = Generator(user_counts, c_embedding_size, review_embedding_size)
+item_missing_generator = Generator(user_counts, c_embedding_size, review_embedding_size)
+item_rating_discriminator = Discriminator(user_counts, c_embedding_size, review_embedding_size)
+item_missing_discriminator = Discriminator(user_counts, c_embedding_size, review_embedding_size)
+item_rating_g_optimizer = torch.optim.Adam(item_rating_generator.parameters(), lr=0.0001)
+item_rating_d_optimizer = torch.optim.Adam(item_rating_discriminator.parameters(), lr=0.0001)
+item_missing_g_optimizer = torch.optim.Adam(item_missing_generator.parameters(), lr=0.0001)
+item_missing_d_optimizer = torch.optim.Adam(item_missing_discriminator.parameters(), lr=0.0001)
+
+# train
+all_users_batches = []
+
+for epoch in range(num_epochs):
+    for step in range(g_step):
+        for user_batch in all_users_batches:
+            g_loss = 0
+            for user in user_batch:
+                real_rating_vector = get_rating_vector(user)
+                real_missing_vector = get_missing_vector(user)
+                conditional_vector = get_conditional_vector(user)
+                reviews = get_all_reviews_of_user(user)
+                fake_rating_vector = user_rating_generator(real_rating_vector, conditional_vector, reviews)
+
+                fake_missing_vector = user_missing_generator(real_missing_vector, conditional_vector, reviews)
+
+                fake_rating_results = user_rating_discriminator(fake_rating_vector, conditional_vector, reviews)
+                fake_missing_results = user_missing_discriminator(fake_missing_vector, conditional_vector, reviews)
+
+                g_loss += (np.log(1. - fake_rating_results.detach().numpy()) + np.log(
+                    1. - fake_missing_results.detach().numpy()))
+            g_loss = np.mean(g_loss)
+            user_rating_g_optimizer.zero_grad()
+            user_missing_g_optimizer.zero_grad()
+            g_loss.backward(retain_graph=True)
+            user_rating_g_optimizer.step()
+            user_missing_g_optimizer.step()
+
+    for step in range(d_step):
+        for user_batch in all_users_batches:
+            d_loss = 0
+            for user in user_batch:
+                real_rating_vector = get_rating_vector(user)
+                real_missing_vector = get_missing_vector(user)
+                conditional_vector = get_conditional_vector(user)
+                reviews = get_all_reviews_of_user(user)
+                fake_rating_vector = user_rating_generator(real_rating_vector, conditional_vector, reviews)
+
+                fake_missing_vector = user_missing_generator(real_missing_vector, conditional_vector, reviews)
+
+                fake_rating_results = user_rating_discriminator(fake_rating_vector, conditional_vector, reviews)
+                fake_missing_results = user_missing_discriminator(fake_missing_vector, conditional_vector, reviews)
+                d_loss += -(np.log(1. - fake_rating_results.detach().numpy()) + np.log(
+                    1. - fake_missing_results.detach().numpy()))
+            d_loss = np.mean(d_loss)
+            user_rating_d_optimizer.zero_grad()
+            user_missing_d_optimizer.zero_grad()
+            d_loss.backward(retain_graph=True)
+            user_rating_d_optimizer.zero_grad()
+            user_missing_d_optimizer.step()
