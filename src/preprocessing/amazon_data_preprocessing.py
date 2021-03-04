@@ -13,3 +13,8 @@ for review_data, rating_data in data_files:
     reviews_df = pd.read_json(review_file_path, lines=True)
     reviews_df.drop(['reviewerName', 'unixReviewTime', 'reviewTime'], axis=1, inplace=True)
     ratings_df = pd.read_csv(rating_file_path, header=None)
+    reviews_summaries_per_user = reviews_df.groupby(by='reviewerID')['reviewText', 'summary']
+    reviews_summaries_per_item = reviews_df.groupby(by='asin')['reviewText', 'summary']
+    # for key, item in reviews_summaries:
+    #     print(reviews_summaries.get_group(key))
+    # reviews_summaries.get_group('A1YJEY40YUW4SE')[['reviewText', 'summary']]
