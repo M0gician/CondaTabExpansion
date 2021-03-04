@@ -15,6 +15,8 @@ for review_data, rating_data in data_files:
     ratings_df = pd.read_csv(rating_file_path, header=None)
     reviews_summaries_per_user = reviews_df.groupby(by='reviewerID')['reviewText', 'summary']
     reviews_summaries_per_item = reviews_df.groupby(by='asin')['reviewText', 'summary']
+    unique_users = reviews_summaries_per_user.groups.keys()
+    unique_items = reviews_summaries_per_item.groups.keys()
     # for key, item in reviews_summaries:
     #     print(reviews_summaries.get_group(key))
     # reviews_summaries.get_group('A1YJEY40YUW4SE')[['reviewText', 'summary']]
