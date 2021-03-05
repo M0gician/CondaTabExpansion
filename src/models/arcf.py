@@ -18,11 +18,6 @@ wandb.init(project="adversarial-recommendation")
 
 # 2. Save model inputs and hyperparameters
 config = wandb.config
-# config.learning_rate = 0.0001
-
-# 3. Log gradients and model parameters
-
-
 
 
 # rating discriminator for user inputs dimensions:
@@ -122,6 +117,12 @@ user_rating_generator = Generator(item_counts, c_embedding_size, review_embeddin
 user_missing_generator = Generator(item_counts, c_embedding_size, review_embedding_size)
 user_rating_discriminator = Discriminator(item_counts, c_embedding_size, review_embedding_size)
 user_missing_discriminator = Discriminator(item_counts, c_embedding_size, review_embedding_size)
+
+wandb.watch(user_rating_generator)
+wandb.watch(user_missing_generator)
+wandb.watch(user_rating_discriminator)
+wandb.watch(user_missing_discriminator)
+
 g_step = 5
 d_step = 2
 batch_size_g = 32
@@ -167,6 +168,7 @@ for epoch in range(num_epochs):
 
                 g_loss += (np.log(1. - fake_rating_results.detach().numpy()) + np.log(
                     1. - fake_missing_results.detach().numpy()))
+
             g_loss = np.mean(g_loss)
             user_rating_g_optimizer.zero_grad()
             user_missing_g_optimizer.zero_grad()
@@ -200,3 +202,11 @@ for epoch in range(num_epochs):
             d_loss.backward(retain_graph=True)
             user_rating_d_optimizer.zero_grad()
             user_missing_d_optimizer.step()
+
+    # run on test data set
+    wandb.log({
+        'epoch': epoch,
+        'generator_loss': 0.00, # todo: update it when get loss on test data
+        'discriminator_loss': 0.123 # # todo: update it when get loss on test data
+    })
+
