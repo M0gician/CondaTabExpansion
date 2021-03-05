@@ -11,6 +11,25 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 
+import wandb
+
+# 1. Start a new run
+wandb.init(project="gpt-3")
+
+# 2. Save model inputs and hyperparameters
+config = wandb.config
+config.learning_rate = 0.01
+
+# 3. Log gradients and model parameters
+wandb.watch(model)
+
+
+# for batch_idx, (data, target) in enumerate(train_loader):
+#     ...
+#     if batch_idx % args.log_interval == 0:
+#         # 4. Log metrics to visualize performance
+#         wandb.log({"loss": loss})
+
 
 # rating discriminator for user inputs dimensions:
 # rating vector: (total_number_of_items, 1)
@@ -147,7 +166,9 @@ for epoch in range(num_epochs):
 
                 fake_missing_vector = user_missing_generator(real_missing_vector, conditional_vector, reviews)
 
-                fake_rating_results = user_rating_discriminator(fake_rating_vector, conditional_vector, reviews)
+                fake_rating_vector_with_missing = fake_rating_vector * real_missing_vector
+                fake_rating_results = user_rating_discriminator(fake_rating_vector_with_missing, conditional_vector,
+                                                                reviews)
                 fake_missing_results = user_missing_discriminator(fake_missing_vector, conditional_vector, reviews)
 
                 g_loss += (np.log(1. - fake_rating_results.detach().numpy()) + np.log(
@@ -170,11 +191,15 @@ for epoch in range(num_epochs):
                 fake_rating_vector = user_rating_generator(real_rating_vector, conditional_vector, reviews)
 
                 fake_missing_vector = user_missing_generator(real_missing_vector, conditional_vector, reviews)
-
-                fake_rating_results = user_rating_discriminator(fake_rating_vector, conditional_vector, reviews)
+                fake_rating_vector_with_missing = fake_rating_vector * real_missing_vector
+                fake_rating_results = user_rating_discriminator(fake_rating_vector_with_missing, conditional_vector,
+                                                                reviews)
+                real_rating_results = user_rating_discriminator(real_rating_vector, conditional_vector, reviews)
                 fake_missing_results = user_missing_discriminator(fake_missing_vector, conditional_vector, reviews)
-                d_loss += -(np.log(1. - fake_rating_results.detach().numpy()) + np.log(
-                    1. - fake_missing_results.detach().numpy()))
+                real_missing_results = user_missing_discriminator(real_missing_vector, conditional_vector, reviews)
+                d_loss += -(np.log(real_rating_results) + np.log(real_missing_results)
+                            + np.log(1. - fake_rating_results.detach().numpy()) +
+                            np.log(1. - fake_missing_results.detach().numpy()))
             d_loss = np.mean(d_loss)
             user_rating_d_optimizer.zero_grad()
             user_missing_d_optimizer.zero_grad()
