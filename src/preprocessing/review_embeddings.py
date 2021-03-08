@@ -10,7 +10,7 @@ tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 model = BertModel.from_pretrained("bert-base-uncased")
 
 # Settings
-useGPU = False
+useGPU = True
 sentence_embedding_type = "CLS"  # "avg"
 review_embedding_type = "avg"  # other?
 
