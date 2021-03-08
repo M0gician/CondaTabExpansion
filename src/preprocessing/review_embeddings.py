@@ -49,10 +49,12 @@ def get_sentence_embedding(sentence_pair):
     if useGPU:
         tokens_tensor = tokens_tensor.to("cuda")
         segments_tensors = segments_tensors.to("cuda")
+
+    # get token embeddings
     with torch.no_grad():
         output = model(tokens_tensor, token_type_ids=segments_tensors)
 
-    # get embedding using specified method
+    # get pooled embedding using specified method
     if sentence_embedding_type == "CLS":
         return output.pooler_output
     elif sentence_embedding_type == "avg":
@@ -66,13 +68,16 @@ def create_sentence_pairs(review):
     pairs = []
     review_sentences = nltk_tokenize.sent_tokenize(review)
     first_sentence, last_sentence = review_sentences[0], review_sentences[-1]
+
     # first sentence alone
     pairs.append((first_sentence, ""))
+
     # all pairs of sentences
     for line in review_sentences[1:]:
         second_sentence = line
         pairs.append((first_sentence, second_sentence))
         first_sentence = line
+
     # last sentence alone
     pairs.append((last_sentence, ""))
     return pairs
@@ -85,36 +90,7 @@ def get_review_embedding(review):
     if review_embedding_type == "avg":
         # avg over all pairs [pairs, 1, 768] => [1, 768]
         mean = torch.mean(torch.stack(list(sentence_embeddings)), axis=0)
-
-
-# def get_review_embedding(review):
-#     """returns review embedding of size [1, 768]"""
-#     embeddings = []
-#     review_sentences = nltk_tokenize.sent_tokenize(review)
-#     first_sentence, last_sentence = review_sentences[0], review_sentences[-1]
-
-#     # first sentence alone
-#     embedding = get_sentence_embedding(first_sentence, "")
-#     embeddings.append(embedding)
-
-#     # all pairs of sentences
-#     for line in review_sentences[1:]:
-#         second_sentence = line
-#         embedding = get_sentence_embedding(first_sentence, second_sentence)
-#         embeddings.append(embedding)
-#         first_sentence = line
-
-#     # last sentence alone
-#     embedding = get_sentence_embedding(last_sentence, "")
-#     embeddings.append(embedding)
-#     np.array(embeddings)
-#     if review_embedding_type == "avg":
-#         print(embeddings.size())
-#         print(embeddings.mean(axis=0).size())
-#         print(embeddings.mean(axis=1).size())
-#         return embeddings.mean()
-#     else:
-#         return None
+        return mean
 
 
 example_review = "I love this product. \
