@@ -8,7 +8,9 @@ nltk.download('punkt')
 tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 model = BertModel.from_pretrained("bert-base-uncased")
 model.eval()
-# model.to('cuda')
+useGPU = False
+if useGPU:
+    model.to('cuda')
 
 f = open("./src/data/review_embeddings.txt", "w")
 
@@ -19,16 +21,18 @@ def tokenize(first_sentence, second_sentence):
     indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)
     segments_ids = [0 for i in range(len(tokenized_first))]
     segments_ids += [1 for i in range(len(tokenized_second))]
-    # print(tokenized_text)
-    # print(segments_ids)
+    if useGPU:
+        print(tokenized_text)
+        print(segments_ids)
     return tokenized_text, segments_ids, indexed_tokens
 
 def get_sentence_embedding(first_sentence, second_sentence):
     tokenized_review, segments_ids, indexed_tokens = tokenize(first_sentence, second_sentence)
     tokens_tensor = torch.tensor([indexed_tokens])
     segments_tensors = torch.tensor([segments_ids])
-    # tokens_tensor = tokens_tensor.to('cuda')
-    # segments_tensors = segments_tensors.to('cuda')
+    if useGPU:
+        tokens_tensor = tokens_tensor.to('cuda')
+        segments_tensors = segments_tensors.to('cuda')
     with torch.no_grad():
         outputs = model(tokens_tensor, token_type_ids=segments_tensors)
         embedding = outputs[0] #[0]
