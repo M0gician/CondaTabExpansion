@@ -18,8 +18,6 @@ model.eval()
 if useGPU:
     model.to("cuda")
 
-f = open("./src/data/review_embeddings.txt", "w")
-
 
 def process(first_sentence, second_sentence):
     """Pre-process sentence(s) for BERT. Returns:
@@ -98,9 +96,10 @@ example_review = "I love this product. \
         Only sociopaths, I reckon. \
         I'd eat this every day if I could. "
 
-reviews = [example_review]
+example_review2 = "I hate this product. \
+        Wish I could ban it from existing "
+
+reviews = [example_review, example_review2]
 for review in reviews:
     review_embedding = get_review_embedding(review)
-    # f.write(review_embedding)
 
-f.close()
