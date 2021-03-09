@@ -10,7 +10,7 @@ tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 model = BertModel.from_pretrained("bert-base-uncased")
 
 # Settings
-useGPU = True
+useGPU = False
 sentence_embedding_type = "CLS"  # "avg"
 review_embedding_type = "avg"  # other?
 
@@ -30,6 +30,7 @@ def process(first_sentence, second_sentence):
     else:
         tokenized_second = []
     tokenized_text = tokenized_first + tokenized_second
+    print(tokenized_text)
     indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)
     segments_ids = [0 for i in range(len(tokenized_first))]
     segments_ids += [1 for i in range(len(tokenized_second))]
@@ -77,7 +78,8 @@ def create_sentence_pairs(review):
         first_sentence = line
 
     # last sentence alone
-    pairs.append((last_sentence, ""))
+    if len(review_sentences) > 1:
+        pairs.append((last_sentence, ""))
     return pairs
 
 
@@ -88,7 +90,6 @@ def get_review_embedding(review):
     if review_embedding_type == "avg":
         # avg over all pairs [pairs, 1, 768] => [1, 768]
         mean = torch.mean(torch.stack(list(sentence_embeddings)), axis=0)
-        return mean
 
 
 example_review = "I love this product. \
@@ -99,7 +100,9 @@ example_review = "I love this product. \
 example_review2 = "I hate this product. \
         Wish I could ban it from existing "
 
-reviews = [example_review, example_review2]
+example_review3 = "Five Stars."
+
+reviews = [example_review, example_review2, example_review3]
 for review in reviews:
     review_embedding = get_review_embedding(review)
 
