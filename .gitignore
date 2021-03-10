@@ -133,3 +133,6 @@ dmypy.json
 
 # data
 ./src/data
+
+# VScode settings
+.vscode/
