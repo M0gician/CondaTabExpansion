@@ -107,9 +107,7 @@ function script:condaRemotePackages($filter) {
 }
 
 function Get-AliasPattern($exe) {
-    $aliases = @($exe) + @(Get-Alias | Where-Object { $_.Definition -eq $exe } | Select-Object -Exp Name)
-  
-    "($($aliases -join '|'))"
+    @($exe) + @(Get-Alias | Where-Object { $_.Definition -eq $exe } | Select-Object -Exp Name)
 }
 
 function CondaTabExpansion($lastBlock) {
@@ -199,36 +197,10 @@ function CondaTabExpansion($lastBlock) {
     }
 }
 
-$PowerTab_RegisterTabExpansion = if (Get-Module -Name powertabl) { 
-    Get-Command Register-TabExpansion -Module powertab -ErrorAction SilentlyContinue
-}
-
-if ($PowerTab_RegisterTabExpansion) {
-    & $PowerTab_RegisterTabExpansion "conda" -Type Command {
-        param($Context, [ref]$TabExpansionHasOutput, [ref]$QuoteSpaces)
-        $line = $Context.Line
-        $lastBlock = [System.Text.RegularExpressions.Regex]::Split($line, '[|;]')[-1].TrimStart()
-        $TabExpansionHasOutput.Value = $true
-        CondaTabExpansion $lastBlock
-    }
-
-    return
-}
-
-if (Test-Path Function:\TabExpansion) {
-    Rename-Item Function:\TabExpansion sysTabExpansionBackup
-}
-
-function TabExpansion($line, $lastWord) {
+Register-ArgumentCompleter -Native -CommandName $(Get-AliasPattern conda) -ScriptBlock {
+	$line = $null
+	$cursor = $null
+	[Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$line, [ref]$cursor)
     $lastBlock = [System.Text.RegularExpressions.Regex]::Split($line, '[|;]')[-1].TrimStart()
-
-    switch -regex ($lastBlock) {
-        # Execute Conda tab completion for all conda-related commands
-        "^$(Get-AliasPattern conda) (.*)" { CondaTabExpansion $lastBlock }
-
-        # Fall back on exisitng tab expansion
-        default { if (Test-Path Function:\sysTabExpansionBackup) {
-            sysTabExpansionBackup $line $lastWord
-        } }
-    }
+    CondaTabExpansion $lastBlock
 }

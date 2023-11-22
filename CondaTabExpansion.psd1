@@ -19,10 +19,10 @@
     FileList = @('CondaTabExpansion.ps1', 'CondaTabExpansion.psm1')
     
     # Minimum version of the Windows PowerShell engine required by this module
-    PowerShellVersion = '3.0'
+    PowerShellVersion = '5.0'
     
     # Functions to export from this module
-    FunctionsToExport = '*'
+    FunctionsToExport = @()
     
     # Cmdlets to export from this module
     CmdletsToExport = @()
@@ -31,7 +31,7 @@
     VariablesToExport = @()
     
     # Aliases to export from this module
-    AliasesToExport = '*'
+    AliasesToExport = @()
     
     # Private data to pass to the module specified in RootModule/ModuleToProcess.
     # This may also contain a PSData hashtable with additional module metadata used by PowerShell.
