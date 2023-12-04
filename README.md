@@ -4,7 +4,7 @@
 
 > *You can now download `CondaTabExpansion` from PowerShell Gallery!* [(here)](https://www.powershellgallery.com/packages/CondaTabExpansion/0.1.1)
 
-This module provides **full support** of `conda` command completion in PowerShell (for version 3 and up supposedly). You can tab and fill commands as if you were running in `bash` or other shells.
+This module provides **full support** of `conda` command completion in PowerShell (for version 5 and up supposedly). You can tab and fill commands as if you were running in `bash` or other shells.
 
 This project is inspired by the `ChocolateyTabExpansion` script in `Chocolatey` [(here)](https://github.com/chocolatey/choco).
 
